@@ -2,11 +2,13 @@ import logging
 from aiogram import Bot, Dispatcher, executor, types
 from config import BOT_TOKEN, ADMIN_ID, BOT_NAME
 from jinja2 import Template
+from Sql import SQL
 
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(BOT_TOKEN)
 dp = Dispatcher(bot)
+sql = SQL('db')
 
 
 @dp.message_handler(commands=['start'])
@@ -16,6 +18,9 @@ async def send_welcome(message: types.Message):
     """
     username = message.from_user.username
     id = message.from_user.id
+    chat_id = message.chat.id
+    if not sql.user_exists(id):
+        sql.add_user(id, username, chat_id)
     template = Template("Hello {{ name }}!\nI'm {{ bot_name }}\n{{ id }}")
 
     await message.reply(template.render(name=username, bot_name=BOT_NAME, id=id))
@@ -30,6 +35,14 @@ async def take_message(message: types.Message):
     user_id = message.from_user.id
     await bot.send_sticker(user_id, file_id)
 
+
+@dp.message_handler(commands=['test'])
+async def send_to_users(message: types.Message):
+    lst = sql.get_chats_id()
+    string = 'Test message'
+    for i in lst:
+        print(i)
+        await bot.send_message(i[0], string)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
