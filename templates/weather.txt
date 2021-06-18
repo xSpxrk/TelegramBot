@@ -1,0 +1,3 @@
+Temp : {{ temp }} °C
+Feels like : {{ feels_like }} °C
+Wind : {{ wind }} meter/sec
