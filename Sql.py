@@ -9,16 +9,21 @@ class SQL:
     def close(self):
         self.connection.close()
 
-    def add_user(self, user_id, username, chat_id):
+    def add_user(self, user_id, username, bot, first_name, last_name):
         with self.connection:
-            self.cursor.execute("INSERT INTO `Users` (`UserId`, `Username`, `ChatId`) VALUES (?, ?, ?)",
-                                (user_id, username, chat_id))
+            self.cursor.execute("INSERT INTO `Users` (`UserId`, `Username`, `Bot`, `FirstName`, `LastName`) VALUES ("
+                                "?, ?, ?, ?, ?)",
+                                (user_id, username, bot, first_name, last_name))
 
     def user_exists(self, user_id):
         with self.connection:
             result = self.cursor.execute("SELECT * FROM `Users` WHERE `UserId` = ?", (user_id,)).fetchall()
             return bool(len(result))
 
-    def get_chats_id(self):
+    def get_users_id(self):
         with self.connection:
-            return self.cursor.execute("SELECT ChatId FROM USERS").fetchall()
+            return self.cursor.execute("SELECT UserId FROM USERS").fetchall()
+
+    def get_user(self, user_id):
+        with self.connection:
+            return self.cursor.execute("SELECT * FROM USERS WHERE UserId = ?", (user_id,)).fetchall()
