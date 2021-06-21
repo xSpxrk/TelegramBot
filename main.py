@@ -1,7 +1,7 @@
 import logging
 from aiogram import Bot, Dispatcher, executor, types
-from config import BOT_TOKEN, ADMIN_ID, BOT_NAME, ADMIN_USERNAME, API_KEY
-from jinja2 import Template, Environment, FileSystemLoader
+from config import *
+from jinja2 import Environment, FileSystemLoader
 from Sql import SQL
 import requests
 
@@ -27,12 +27,12 @@ async def send_welcome(message: types.Message):
     user = message.from_user
     id = user['id']
     username = user['username']
-    bot = user['is_bot']
+    is_bot = user['is_bot']
     first_name = user['first_name']
     last_name = user['last_name']
 
     if not sql.user_exists(id):
-        sql.add_user(id, username, bot, first_name, last_name)
+        sql.add_user(id, username, is_bot, first_name, last_name)
 
     await message.reply(load_greeting_template(username, BOT_NAME))
 
@@ -55,6 +55,9 @@ def is_admin(username):
 
 @dp.message_handler(commands=['test'])
 async def send_message_to_users(message: types.Message):
+    """
+    This is command to send users message
+    """
     if is_admin(message.from_user.username):
         lst = sql.get_users_id()
         string = 'Test message'
@@ -86,9 +89,22 @@ def get_weather():
 
 @dp.message_handler(commands=['weather'])
 async def send_weather(message: types.Message):
+    """
+    Get weather
+    """
     weather = get_weather()
     res = load_weather_template(weather[0], weather[1], weather[2])
     await bot.send_message(message.from_user.id, res)
+
+
+@dp.message_handler(commands=['get_location'])
+async def send_location(message: types.Message):
+    """
+    Get location by coordinates
+    """
+    latitude, longitude = message.get_args().split(',')
+    await bot.send_location(message.from_user.id, latitude, longitude)
+
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
