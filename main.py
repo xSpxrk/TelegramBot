@@ -1,13 +1,17 @@
 import logging
+
+import aiogram.types
 from aiogram import Bot, Dispatcher, executor, types
 from config import *
 from jinja2 import Environment, FileSystemLoader
 from Sql import SQL
 import requests
+from keyboard import menu
+from aiogram.dispatcher.filters import Text
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(BOT_TOKEN)
+bot = Bot(BOT_TOKEN,parse_mode=types.ParseMode.HTML)
 dp = Dispatcher(bot)
 sql = SQL('db')
 
@@ -30,7 +34,6 @@ async def send_welcome(message: types.Message):
     is_bot = user['is_bot']
     first_name = user['first_name']
     last_name = user['last_name']
-
     if not sql.user_exists(id):
         sql.add_user(id, username, is_bot, first_name, last_name)
 
@@ -53,8 +56,8 @@ def is_admin(username):
     return False
 
 
-@dp.message_handler(commands=['test'])
-async def send_message_to_users(message: types.Message):
+@dp.message_handler(commands=['send_to_everyone'])
+async def send_to_everyone(message: types.Message):
     """
     This is command to send users message
     """
@@ -97,13 +100,36 @@ async def send_weather(message: types.Message):
     await bot.send_message(message.from_user.id, res)
 
 
-@dp.message_handler(commands=['get_location'])
+@dp.message_handler(commands=['location'])
 async def send_location(message: types.Message):
     """
     Get location by coordinates
     """
     latitude, longitude = message.get_args().split(',')
     await bot.send_location(message.from_user.id, latitude, longitude)
+
+
+@dp.message_handler(commands=['open_keyboard'])
+async def open_keyboard(message: types.Message):
+    await message.answer("Keyboard is opened", reply_markup=menu)
+
+
+@dp.message_handler(Text(equals='close keyboard'))
+async def close_keyboard(message: types.Message):
+    await message.answer("Keyboard is closed", reply_markup=types.ReplyKeyboardRemove())
+
+
+def load_user_template(first_name, last_name, username, id):
+    file_loader = FileSystemLoader('templates')
+    env = Environment(loader=file_loader)
+    template = env.get_template('user.txt')
+    return template.render(first_name=first_name, last_name=last_name, username=username, id=id)
+
+
+@dp.message_handler(commands=['me'])
+async def get_user_information(message: types.Message):
+    user = message.from_user
+    await message.answer(load_user_template(user['first_name'], user['last_name'], user['username'], user['id']))
 
 
 if __name__ == '__main__':

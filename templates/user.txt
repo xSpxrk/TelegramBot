@@ -1,0 +1,5 @@
+Information about you🤙:
+📛<i>First_name</i> : <b>{{ first_name }}</b>
+🧐<i>Last_name</i> : <b>{{ last_name }}</b>
+🥳<i>Username</i> : <b>{{ username }}</b>
+🤯<i>Id</i> : <b>{{ id }}</b>
