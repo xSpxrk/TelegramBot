@@ -2,6 +2,7 @@ from jinja2 import Environment, FileSystemLoader
 
 file_loader = FileSystemLoader('templates')
 env = Environment(loader=file_loader)
+
 greeting_template = env.get_template('greeting.txt')
 weather_template = env.get_template('weather.txt')
 user_template = env.get_template('user.txt')

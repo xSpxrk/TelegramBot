@@ -1,17 +1,10 @@
 from loader import sql, bot, dp
 from aiogram import types
 from config import *
-from jinja2 import Environment, FileSystemLoader
 import requests
 from keyboard import menu
 from aiogram.dispatcher.filters import Text
-
-
-def load_greeting_template(name, bot_name):
-    file_loader = FileSystemLoader('templates')
-    env = Environment(loader=file_loader)
-    template = env.get_template('greeting.txt')
-    return template.render(name=name, bot_name=bot_name)
+from loader_templates import load_user_template, load_greeting_template, load_weather_template
 
 
 @dp.message_handler(commands=['start'])
@@ -42,9 +35,7 @@ async def take_message(message: types.Message):
 
 
 def is_admin(username):
-    if username == ADMIN_USERNAME:
-        return True
-    return False
+    return username == ADMIN_USERNAME
 
 
 @dp.message_handler(commands=['send_to_everyone'])
@@ -61,20 +52,12 @@ async def send_to_everyone(message: types.Message):
         await message.reply('You are not admin')
 
 
-def load_weather_template(temp, feels_like, wind):
-    file_loader = FileSystemLoader('templates')
-    env = Environment(loader=file_loader)
-    template = env.get_template('weather.txt')
-    return template.render(temp=temp, feels_like=feels_like, wind=wind)
-
-
 def get_weather():
     url = 'http://api.openweathermap.org/data/2.5/weather'
     units = 'metric'
     city = 'Omsk'
     params = {'q': city, 'appid': API_KEY, 'units': units}
-    weather = requests.get(url, params)
-    weather = weather.json()
+    weather = requests.get(url, params).json()
     temp = weather['main']['temp']
     feels_like = weather['main']['feels_like']
     wind = weather['wind']['speed']
@@ -108,13 +91,6 @@ async def open_keyboard(message: types.Message):
 @dp.message_handler(Text(equals='close keyboard'))
 async def close_keyboard(message: types.Message):
     await message.answer("Keyboard is closed", reply_markup=types.ReplyKeyboardRemove())
-
-
-def load_user_template(first_name, last_name, username, id):
-    file_loader = FileSystemLoader('templates')
-    env = Environment(loader=file_loader)
-    template = env.get_template('user.txt')
-    return template.render(first_name=first_name, last_name=last_name, username=username, id=id)
 
 
 @dp.message_handler(commands=['me'])

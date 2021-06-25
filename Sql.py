@@ -6,9 +6,6 @@ class SQL:
         self.connection = sqlite3.connect(database_file)
         self.cursor = self.connection.cursor()
 
-    def close(self):
-        self.connection.close()
-
     def add_user(self, user_id, username, bot, first_name, last_name):
         with self.connection:
             self.cursor.execute("INSERT INTO `Users` (`UserId`, `Username`, `Bot`, `FirstName`, `LastName`) VALUES ("
