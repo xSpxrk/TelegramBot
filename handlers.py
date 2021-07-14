@@ -1,10 +1,11 @@
-from loader import sql, bot, dp
+from loader import bot, dp
 from aiogram import types
 from config import *
 import requests
 from keyboard import menu
 from aiogram.dispatcher.filters import Text
 from loader_templates import load_user_template, load_greeting_template, load_weather_template
+from db_methods import get_users_id, add_user, is_user_exist
 
 
 @dp.message_handler(commands=['start'])
@@ -18,36 +19,26 @@ async def send_welcome(message: types.Message):
     is_bot = user['is_bot']
     first_name = user['first_name']
     last_name = user['last_name']
-    if not sql.user_exists(id):
-        sql.add_user(id, username, is_bot, first_name, last_name)
+    if not is_user_exist(id):
+        add_user(id, username, is_bot, first_name, last_name)
 
     await message.reply(load_greeting_template(username, BOT_NAME))
-
-
-@dp.message_handler(content_types=types.ContentType.STICKER)
-async def take_message(message: types.Message):
-    """
-    This is echo sticker handler
-    """
-    file_id = getattr(message, 'sticker').file_id
-    user_id = message.from_user.id
-    await bot.send_sticker(user_id, file_id)
 
 
 def is_admin(username):
     return username == ADMIN_USERNAME
 
 
-@dp.message_handler(commands=['send_to_everyone'])
+@dp.message_handler(commands=['notify'])
 async def send_to_everyone(message: types.Message):
     """
     This is command to send users message
     """
     if is_admin(message.from_user.username):
-        lst = sql.get_users_id()
-        string = 'Test message'
-        for i in lst:
-            await bot.send_message(i[0], string)
+        id_users = get_users_id()
+        report = message.get_args()
+        for id_user in id_users:
+            await bot.send_message(id_user, report)
     else:
         await message.reply('You are not admin')
 
@@ -79,7 +70,7 @@ async def send_location(message: types.Message):
     """
     Get location by coordinates
     """
-    latitude, longitude = message.get_args().split(',')
+    latitude, longitude = message.get_args().split()
     await bot.send_location(message.from_user.id, latitude, longitude)
 
 
